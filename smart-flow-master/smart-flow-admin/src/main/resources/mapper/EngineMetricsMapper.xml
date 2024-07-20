@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="org.smartboot.smart.flow.admin.mapper.EngineMetricMapper">
+
+    <resultMap id="BaseResultMap" type="org.smartboot.smart.flow.admin.model.EngineMetrics">
+        <id column="id" property="id" jdbcType="BIGINT"/>
+        <result column="engine_name" property="engineName" jdbcType="VARCHAR"/>
+        <result column="content" property="content" jdbcType="BLOB"/>
+        <result column="md5" property="md5" jdbcType="VARCHAR"/>
+        <result column="address" property="address" jdbcType="VARCHAR"/>
+        <result column="host" property="host" jdbcType="VARCHAR"/>
+        <result column="report_time" property="reportTime" jdbcType="TIMESTAMP"/>
+        <result column="created" property="created" jdbcType="TIMESTAMP"/>
+        <result column="updated" property="updated" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <select id="detail" resultMap="BaseResultMap">
+        select *
+        from engine_table_metrics
+        where id = #{id}
+    </select>
+
+    <insert id="insert" parameterType="org.smartboot.smart.flow.admin.model.EngineMetrics" useGeneratedKeys="true" keyProperty="trace.id">
+        insert into engine_table_metrics(engine_name, content, md5, address, host, report_time, created, updated)
+        values(#{trace.engineName}, #{trace.content}, #{trace.md5}, #{trace.address}, #{trace.host}, #{trace.reportTime}, now(), now())
+    </insert>
+
+    <select id="list" resultMap="BaseResultMap">
+        select id, engine_name, md5, address, host, report_time, created
+        from engine_table_metrics
+        where 1 = 1
+        <if test="query.engineName != null">
+            and engine_name like concat('%', #{query.engineName}, '%')
+        </if>
+
+        <if test="query.host != null">
+            and host like concat('%', #{query.host}, '%')
+        </if>
+
+        order by id desc
+        limit #{query.start}, #{query.pageSize};
+    </select>
+
+    <select id="count" resultType="java.lang.Long">
+        select count(1)
+        from engine_table_metrics
+        where 1 = 1
+        <if test="query.engineName != null">
+            and engine_name like concat('%', #{query.engineName}, '%')
+        </if>
+
+        <if test="query.host != null">
+            and host like concat('%', #{query.host}, '%')
+        </if>
+    </select>
+
+    <select id="selectEngines" resultMap="BaseResultMap">
+        select engine_name, md5, host, address
+        from engine_table_metrics
+        where created >= #{query.startTime}
+        group by engine_name, md5, host, address
+    </select>
+
+    <select id="queryLastestRecordIds" resultMap="BaseResultMap">
+        select engine_name, md5, host, address, max(id) as id
+        from engine_table_metrics
+        where
+            created >= #{query.startTime}
+            and engine_name = #{query.engineName}
+            and md5 = #{query.md5}
+        <if test="query.hosts != null">
+            and host in
+            <foreach collection="query.hosts" open="(" close=")" separator="," item="item">
+                #{item}
+            </foreach>
+        </if>
+        group by engine_name, md5, host, address
+    </select>
+
+    <select id="listByIdList" resultMap="BaseResultMap">
+        select *
+        from engine_table_metrics
+        where id in
+        <foreach collection="ids" open="(" close=")" separator="," item="item">
+            #{item}
+        </foreach>
+    </select>
+
+    <delete id="deleteOldest">
+        delete from engine_table_metrics where created <![CDATA[<=]]> #{date}
+    </delete>
+</mapper>

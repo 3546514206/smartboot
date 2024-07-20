@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="org.smartboot.smart.flow.admin.mapper.EngineTraceMapper">
+
+    <resultMap id="BaseResultMap" type="org.smartboot.smart.flow.admin.model.EngineTrace">
+        <id column="id" property="id" jdbcType="BIGINT"/>
+        <result column="engine_name" property="engineName" jdbcType="VARCHAR"/>
+        <result column="content" property="content" jdbcType="BLOB"/>
+        <result column="request" property="request" jdbcType="BLOB"/>
+        <result column="result" property="result" jdbcType="BLOB"/>
+        <result column="md5" property="md5" jdbcType="VARCHAR"/>
+        <result column="address" property="address" jdbcType="VARCHAR"/>
+        <result column="host" property="host" jdbcType="VARCHAR"/>
+        <result column="trace_id" property="traceId" jdbcType="VARCHAR"/>
+        <result column="status" property="status" jdbcType="INTEGER"/>
+        <result column="message" property="message" jdbcType="VARCHAR"/>
+        <result column="report_time" property="reportTime" jdbcType="TIMESTAMP"/>
+        <result column="trace_time" property="traceTime" jdbcType="TIMESTAMP"/>
+        <result column="end_time" property="endTime" jdbcType="TIMESTAMP"/>
+        <result column="created" property="created" jdbcType="TIMESTAMP"/>
+        <result column="updated" property="updated" jdbcType="TIMESTAMP"/>
+        <result column="escaped" property="escaped" jdbcType="BIGINT"/>
+    </resultMap>
+
+    <select id="detail" resultMap="BaseResultMap">
+        select *
+        from engine_table_trace
+        where id = #{id}
+    </select>
+
+    <insert id="insert" parameterType="org.smartboot.smart.flow.admin.model.EngineTrace" useGeneratedKeys="true" keyProperty="trace.id">
+        insert into engine_table_trace(engine_name, content, md5, address, host, trace_id, report_time,
+                                       created, updated, status, message, request, result, trace_time, end_time, escaped)
+        values(#{trace.engineName}, #{trace.content}, #{trace.md5}, #{trace.address}, #{trace.host}, #{trace.traceId},
+               #{trace.reportTime}, now(), now(), #{trace.status}, #{trace.message}, #{trace.request}, #{trace.result},
+               #{trace.traceTime}, #{trace.endTime}, #{trace.escaped})
+    </insert>
+
+    <select id="list" resultMap="BaseResultMap">
+        select id, engine_name, md5, address, host, report_time, created, trace_id, status, message, escaped
+        from engine_table_trace
+        where 1 = 1
+        <if test="query.engineName != null">
+            and engine_name like concat('%', #{query.engineName}, '%')
+        </if>
+
+        <if test="query.host != null">
+            and host like concat('%', #{query.host}, '%')
+        </if>
+
+        <if test="query.traceId != null">
+            and trace_id like concat('%', #{query.traceId}, '%')
+        </if>
+
+        order by id desc
+        limit #{query.start}, #{query.pageSize};
+    </select>
+
+    <select id="count" resultType="java.lang.Long">
+        select count(1)
+        from engine_table_trace
+        where 1 = 1
+        <if test="query.engineName != null">
+            and engine_name like concat('%', #{query.engineName}, '%')
+        </if>
+
+        <if test="query.host != null">
+            and host like concat('%', #{query.host}, '%')
+        </if>
+
+        <if test="query.traceId != null">
+            and trace_id like concat('%', #{query.traceId}, '%')
+        </if>
+    </select>
+
+    <delete id="deleteOldest">
+        delete  from engine_table_trace where created <![CDATA[<=]]> #{date}
+    </delete>
+
+</mapper>

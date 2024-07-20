@@ -1,0 +1,392 @@
+<xsd:schema xmlns="http://org.smartboot/smart-flow"
+            xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            targetNamespace="http://org.smartboot/smart-flow"
+            elementFormDefault="qualified">
+
+    <!-- Predefined  Attributes -->
+    <xsd:attribute name="rollback" type="xsd:boolean">
+        <xsd:annotation>
+            <xsd:documentation>
+                设置组件是否可回滚，默认为false，不可回滚， 仅对基本类型组件生效
+            </xsd:documentation>
+        </xsd:annotation>
+    </xsd:attribute>
+
+    <xsd:attribute name="degradable" type="xsd:boolean">
+        <xsd:annotation>
+            <xsd:documentation>
+                设置组件是否可降级，默认为false，开启降级时，当组件执行发生异常不会中断流程
+            </xsd:documentation>
+        </xsd:annotation>
+    </xsd:attribute>
+
+    <xsd:attribute name="async" type="xsd:boolean">
+        <xsd:annotation>
+            <xsd:documentation>
+                设置组件是否异步执行，默认false，注意设置此属性需要指定Executor
+            </xsd:documentation>
+        </xsd:annotation>
+    </xsd:attribute>
+
+    <xsd:attribute name="timeout" type="xsd:int">
+        <xsd:annotation>
+            <xsd:documentation>
+                异步组件超时时间，单位毫秒(ms)
+            </xsd:documentation>
+        </xsd:annotation>
+    </xsd:attribute>
+
+    <xsd:attribute name="dependsAll" type="xsd:boolean">
+        <xsd:annotation>
+            <xsd:documentation>
+                等待所有前置异步组件完成
+            </xsd:documentation>
+        </xsd:annotation>
+    </xsd:attribute>
+
+    <xsd:attribute name="dependsOn" type="xsd:string">
+        <xsd:annotation>
+            <xsd:documentation>
+                设置组件的前置依赖组件名称，当前置组件为异步组件时，会等待异步组件执行完毕后开始执行当前组件
+                多个组件名称以,分割
+            </xsd:documentation>
+        </xsd:annotation>
+    </xsd:attribute>
+
+    <xsd:attribute name="enabled" type="xsd:boolean">
+        <xsd:annotation>
+            <xsd:documentation>
+                启用/禁用组件，默认启用组件，设置为false，禁用该组件时，该组件不会执行
+            </xsd:documentation>
+        </xsd:annotation>
+    </xsd:attribute>
+
+    <!-- 通用属性组   -->
+    <xsd:attributeGroup name="defaultAttributeGroup">
+        <xsd:attribute ref="async"/>
+        <xsd:attribute ref="rollback"/>
+        <xsd:attribute ref="degradable"/>
+        <xsd:attribute ref="dependsOn"/>
+        <xsd:attribute ref="timeout"/>
+        <xsd:attribute ref="enabled"/>
+        <xsd:attribute ref="dependsAll"/>
+    </xsd:attributeGroup>
+
+    <xsd:attribute name="execute" type="xsd:string">
+        <xsd:annotation>
+            <xsd:documentation><![CDATA[引用executable执行器]]></xsd:documentation>
+        </xsd:annotation>
+    </xsd:attribute>
+
+    <xsd:attribute name="name" type="xsd:string">
+        <xsd:annotation>
+            <xsd:documentation><![CDATA[标识引擎、流水线、脚本等组件]]></xsd:documentation>
+        </xsd:annotation>
+    </xsd:attribute>
+
+
+    <!-- 引擎标签定义   -->
+
+    <!-- 条件表达式   -->
+    <xsd:element name="script">
+        <xsd:annotation>
+            <xsd:documentation><![CDATA[定义一个script。]]></xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexType mixed="true">
+            <xsd:attribute name="name" type="xsd:string" use="required">
+                <xsd:annotation>
+                    <xsd:documentation><![CDATA[标识脚本，Spring环境下name可以为相应的bean名称]]></xsd:documentation>
+                </xsd:annotation>
+            </xsd:attribute>
+            <xsd:attribute name="type" type="xsd:string">
+                <xsd:annotation>
+                    <xsd:documentation><![CDATA[script类型，例如QLExpress、OGNL等, 或者填写类全称限定名，Spring环境下可不填写该字段]]></xsd:documentation>
+                </xsd:annotation>
+            </xsd:attribute>
+            <xsd:anyAttribute namespace="##any" processContents="lax"/>
+        </xsd:complexType>
+    </xsd:element>
+
+    <xsd:element name="engines">
+        <xsd:annotation>
+            <xsd:documentation><![CDATA[engines根对象]]></xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexType >
+            <xsd:sequence>
+                <xsd:choice minOccurs="2" maxOccurs="unbounded">
+                    <xsd:element ref="pipeline"/>
+                    <xsd:element ref="engine"/>
+                    <xsd:element ref="script"/>
+                    <xsd:element ref="script-loader"/>
+                </xsd:choice>
+            </xsd:sequence>
+            <!-- 使用smart-flow单独解析xml文件时，对于标签引用的类创建是否启用缓存          -->
+            <xsd:attribute name="useCache" type="xsd:boolean" default="true"/>
+        </xsd:complexType>
+    </xsd:element>
+
+    <!-- Script Loader  -->
+    <xsd:element name="script-loader">
+        <xsd:annotation>
+            <xsd:documentation><![CDATA[定义ScriptLoader加载外置脚本]]></xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexType>
+            <xsd:attribute name="locations" type="xsd:string" use="required">
+                <xsd:annotation>
+                    <xsd:documentation><![CDATA[加载位置，多个以,分割]]></xsd:documentation>
+                </xsd:annotation>
+            </xsd:attribute>
+            <!--  可接受的文件后缀，默认所有      -->
+            <xsd:attribute name="accept" type="xsd:string">
+                <xsd:annotation>
+                    <xsd:documentation><![CDATA[可接受的文件后缀，多个以,分割]]></xsd:documentation>
+                </xsd:annotation>
+            </xsd:attribute>
+            <!--  需要排除的文件后缀，默认不过滤文件，除开默认的xml和properties  -->
+            <xsd:attribute name="exclude" type="xsd:string">
+                <xsd:annotation>
+                    <xsd:documentation><![CDATA[需要排除的文件后缀，多个以,分割]]></xsd:documentation>
+                </xsd:annotation>
+            </xsd:attribute>
+        </xsd:complexType>
+    </xsd:element>
+
+    <!-- Engine  -->
+    <xsd:element name="engine">
+        <xsd:annotation>
+            <xsd:documentation><![CDATA[定义一个engine]]></xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexType>
+            <!--  engine的名称是必须的      -->
+            <xsd:attribute name="name" type="xsd:string" use="required">
+                <xsd:annotation>
+                    <xsd:documentation><![CDATA[标识引擎]]></xsd:documentation>
+                </xsd:annotation>
+            </xsd:attribute>
+            <!--  engine的所属的pipeline名称也是必须的      -->
+            <xsd:attribute name="pipeline" type="xsd:string" use="required"/>
+            <xsd:attribute name="exceptionHandler" type="xsd:string"/>
+            <xsd:anyAttribute namespace="##any" processContents="lax"/>
+        </xsd:complexType>
+    </xsd:element>
+
+    <!-- pipeline -->
+    <xsd:element name="pipeline">
+        <xsd:annotation>
+            <xsd:documentation><![CDATA[定义一个pipeline。]]></xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexType >
+            <xsd:sequence>
+                <xsd:choice minOccurs="1" maxOccurs="unbounded">
+                    <xsd:element ref="pipeline"/>
+                    <xsd:element ref="component"/>
+                    <xsd:element ref="adapter" />
+                    <xsd:element ref="if"/>
+                    <xsd:element ref="choose"/>
+                </xsd:choice>
+            </xsd:sequence>
+            <!--  pipeline的名称是必须的      -->
+            <xsd:attribute name="name" type="xsd:string" use="required">
+                <xsd:annotation>
+                    <xsd:documentation><![CDATA[标识流水线]]></xsd:documentation>
+                </xsd:annotation>
+            </xsd:attribute>
+        </xsd:complexType>
+    </xsd:element>
+
+    <!-- component   -->
+    <xsd:element name="component">
+        <xsd:annotation>
+            <xsd:documentation><![CDATA[定义一个基础组件。]]></xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexType>
+            <xsd:attribute ref="name"/>
+            <xsd:attribute ref="execute"/>
+            <xsd:attribute name="subprocess" type="xsd:string">
+                <xsd:annotation>
+                    <xsd:documentation><![CDATA[引用子流程定义，值为子流程的名称]]></xsd:documentation>
+                </xsd:annotation>
+            </xsd:attribute>
+            <xsd:attribute name="degrade-callback" type="xsd:string">
+                <xsd:annotation>
+                    <xsd:documentation><![CDATA[降级回调，仅在属性degradable=true时生效]]></xsd:documentation>
+                </xsd:annotation>
+            </xsd:attribute>
+            <xsd:attributeGroup ref="defaultAttributeGroup"/>
+            <xsd:anyAttribute namespace="##any" processContents="lax"/>
+        </xsd:complexType>
+    </xsd:element>
+
+    <xsd:element name="adapter">
+        <xsd:annotation>
+            <xsd:documentation><![CDATA[定义一个适配器]]></xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:choice minOccurs="1" maxOccurs="unbounded">
+                    <xsd:element ref="pipeline"/>
+                    <xsd:element ref="component"/>
+                    <xsd:element ref="choose"/>
+                    <xsd:element ref="if"/>
+                    <xsd:element ref="adapter"/>
+                </xsd:choice>
+            </xsd:sequence>
+            <xsd:attribute ref="name" />
+            <xsd:attribute name="execute" type="xsd:string" use="required">
+                <xsd:annotation>
+                    <xsd:documentation><![CDATA[适配器]]></xsd:documentation>
+                </xsd:annotation>
+            </xsd:attribute>
+            <xsd:attributeGroup ref="defaultAttributeGroup"/>
+            <xsd:anyAttribute namespace="##any" processContents="lax"/>
+        </xsd:complexType>
+    </xsd:element>
+
+    <!-- if component  -->
+    <xsd:element name="if">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element ref="then" minOccurs="1" maxOccurs="1" />
+                <xsd:element ref="else" minOccurs="0" maxOccurs="1" />
+            </xsd:sequence>
+            <xsd:attribute ref="name"/>
+            <xsd:attribute name="test" type="xsd:string" use="required">
+                <xsd:annotation>
+                    <xsd:documentation><![CDATA[条件判断对象]]></xsd:documentation>
+                </xsd:annotation>
+            </xsd:attribute>
+            <xsd:attributeGroup ref="defaultAttributeGroup"/>
+            <xsd:anyAttribute namespace="##any" processContents="lax"/>
+        </xsd:complexType>
+    </xsd:element>
+
+    <xsd:element name="then">
+        <xsd:annotation>
+            <xsd:documentation><![CDATA[必须与if结合使用。]]></xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexType>
+            <xsd:sequence >
+                <xsd:choice minOccurs="0" maxOccurs="unbounded">
+                    <xsd:element ref="pipeline"/>
+                    <xsd:element ref="component"/>
+                    <xsd:element ref="if"/>
+                    <xsd:element ref="choose"/>
+                    <xsd:element ref="adapter"/>
+                </xsd:choice>
+            </xsd:sequence>
+            <xsd:attribute ref="name"/>
+            <xsd:attribute ref="execute"/>
+            <xsd:attribute name="degrade-callback" type="xsd:string">
+                <xsd:annotation>
+                    <xsd:documentation><![CDATA[降级回调，仅在属性degradable=true时生效]]></xsd:documentation>
+                </xsd:annotation>
+            </xsd:attribute>
+            <xsd:attributeGroup ref="defaultAttributeGroup"/>
+            <xsd:anyAttribute namespace="##any" processContents="lax"/>
+        </xsd:complexType>
+    </xsd:element>
+
+    <xsd:element name="else">
+        <xsd:annotation>
+            <xsd:documentation><![CDATA[必须与if结合使用。]]></xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexType>
+            <xsd:sequence >
+                <xsd:choice minOccurs="0" maxOccurs="unbounded">
+                    <xsd:element ref="pipeline"/>
+                    <xsd:element ref="component"/>
+                    <xsd:element ref="if"/>
+                    <xsd:element ref="choose"/>
+                    <xsd:element ref="adapter"/>
+                </xsd:choice>
+            </xsd:sequence>
+            <xsd:attribute ref="name"/>
+            <xsd:attribute ref="execute"/>
+            <xsd:attribute name="degrade-callback" type="xsd:string">
+                <xsd:annotation>
+                    <xsd:documentation><![CDATA[降级回调，仅在属性degradable=true时生效]]></xsd:documentation>
+                </xsd:annotation>
+            </xsd:attribute>
+            <xsd:attributeGroup ref="defaultAttributeGroup"/>
+            <xsd:anyAttribute namespace="##any" processContents="lax"/>
+        </xsd:complexType>
+    </xsd:element>
+
+    <!-- choose -->
+    <xsd:element name="choose">
+        <xsd:annotation>
+            <xsd:documentation><![CDATA[switch控制流。]]></xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element ref="case" minOccurs="2" maxOccurs="unbounded" />
+                <xsd:element ref="default" minOccurs="0" maxOccurs="1"/>
+            </xsd:sequence>
+            <xsd:attribute ref="name"/>
+            <xsd:attribute name="test" type="xsd:string" use="required">
+                <xsd:annotation>
+                    <xsd:documentation><![CDATA[条件判断对象]]></xsd:documentation>
+                </xsd:annotation>
+            </xsd:attribute>
+            <xsd:attributeGroup ref="defaultAttributeGroup"/>
+            <xsd:anyAttribute namespace="##any" processContents="lax"/>
+        </xsd:complexType>
+    </xsd:element>
+
+    <xsd:element name="case">
+        <xsd:annotation>
+            <xsd:documentation><![CDATA[必须与when结合使用。]]></xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexType>
+            <xsd:sequence >
+                <xsd:choice minOccurs="0" maxOccurs="unbounded">
+                    <xsd:element ref="pipeline"/>
+                    <xsd:element ref="component"/>
+                    <xsd:element ref="if"/>
+                    <xsd:element ref="choose"/>
+                    <xsd:element ref="adapter"/>
+                </xsd:choice>
+            </xsd:sequence>
+            <xsd:attribute name="when" type="xsd:string" use="required">
+                <xsd:annotation>
+                    <xsd:documentation><![CDATA[当值为指定值时，进入该分支。]]></xsd:documentation>
+                </xsd:annotation>
+            </xsd:attribute>
+            <xsd:attribute ref="execute"/>
+            <xsd:attribute name="degrade-callback" type="xsd:string">
+                <xsd:annotation>
+                    <xsd:documentation><![CDATA[降级回调，仅在属性degradable=true时生效]]></xsd:documentation>
+                </xsd:annotation>
+            </xsd:attribute>
+            <xsd:attributeGroup ref="defaultAttributeGroup"/>
+            <xsd:anyAttribute namespace="##any" processContents="lax"/>
+        </xsd:complexType>
+    </xsd:element>
+
+    <xsd:element name="default">
+        <xsd:annotation>
+            <xsd:documentation><![CDATA[必须与when结合使用。]]></xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexType>
+            <xsd:sequence >
+                <xsd:choice minOccurs="0" maxOccurs="unbounded">
+                    <xsd:element ref="pipeline"/>
+                    <xsd:element ref="component"/>
+                    <xsd:element ref="if"/>
+                    <xsd:element ref="choose"/>
+                    <xsd:element ref="adapter"/>
+                </xsd:choice>
+            </xsd:sequence>
+            <xsd:attribute ref="name"/>
+            <xsd:attribute ref="execute"/>
+            <xsd:attribute name="degrade-callback" type="xsd:string">
+                <xsd:annotation>
+                    <xsd:documentation><![CDATA[降级回调，仅在属性degradable=true时生效]]></xsd:documentation>
+                </xsd:annotation>
+            </xsd:attribute>
+            <xsd:attributeGroup ref="defaultAttributeGroup"/>
+            <xsd:anyAttribute namespace="##any" processContents="lax"/>
+        </xsd:complexType>
+    </xsd:element>
+
+</xsd:schema>

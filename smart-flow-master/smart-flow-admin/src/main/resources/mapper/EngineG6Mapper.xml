@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="org.smartboot.smart.flow.admin.mapper.EngineG6ConfigMapper">
+
+    <resultMap id="BaseResultMap" type="org.smartboot.smart.flow.admin.model.EngineG6Config">
+        <id column="id" property="id" jdbcType="BIGINT"/>
+        <result column="engine_name" property="engineName" jdbcType="VARCHAR"/>
+        <result column="content" property="content" jdbcType="BLOB"/>
+        <result column="md5" property="md5" jdbcType="VARCHAR"/>
+        <result column="created" property="created" jdbcType="TIMESTAMP"/>
+        <result column="updated" property="updated" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <select id="detail" resultMap="BaseResultMap">
+        select *
+        from engine_g6_config
+        where engine_name = #{engine} and md5 = #{md5}
+    </select>
+
+    <insert id="insert" parameterType="org.smartboot.smart.flow.admin.model.EngineG6Config">
+        insert into engine_g6_config(engine_name, content, md5, created, updated)
+        values(#{snapshot.engineName}, #{snapshot.content}, #{snapshot.md5}, now(), now())
+    </insert>
+
+</mapper>

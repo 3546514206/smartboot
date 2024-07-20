@@ -1,0 +1,3 @@
+groovy=org.smartboot.flow.script.extension.groovy.GroovyScriptExecutor
+javascript=org.smartboot.flow.script.extension.groovy.JavaScriptExecutor
+js=org.smartboot.flow.script.extension.groovy.JavaScriptExecutor

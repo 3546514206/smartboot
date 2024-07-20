@@ -1,0 +1,2 @@
+reflect=org.smartboot.plugin.executable.ReflectExecutable
+shell=org.smartboot.plugin.executable.ShellExecutable

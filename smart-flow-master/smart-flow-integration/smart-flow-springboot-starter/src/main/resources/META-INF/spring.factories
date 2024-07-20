@@ -1,0 +1,5 @@
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+  org.smartboot.flow.springboot.extension.FlowHttpManagerConfiguration,\
+  org.smartboot.flow.springboot.extension.FlowDatabaseXmlSelectorConfiguration,\
+  org.smartboot.flow.springboot.extension.FlowTraceConfiguration,\
+  org.smartboot.flow.springboot.extension.FlowInitializerConfiguration

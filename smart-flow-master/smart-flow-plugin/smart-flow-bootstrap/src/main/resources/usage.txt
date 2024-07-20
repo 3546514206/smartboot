@@ -1,0 +1,12 @@
+options:
+
+   -t                         print executing tree.
+   -h/help                    print this help message.
+   -f/file fileLocation       specified files, all files must be same type (xml or yaml).
+
+
+Usages:
+
+smart-flow.sh -h
+smart-flow.sh -help
+smart-flow.sh -t -f file
